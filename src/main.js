@@ -157,6 +157,8 @@ function updateAllUI() {
   renderProjectionTable(state.trajectory);
   updateProjectionStats();
   updateSidebarGoalsCount();
+  updateTaxSection();
+  updateGoalsPreview();
 }
 
 function updateDashboardKPIs() {
@@ -272,6 +274,124 @@ function updateProjectionStats() {
 function updateSidebarGoalsCount() {
   const el = document.getElementById('sidebar-goals-count');
   if (el) el.textContent = String(state.goals.length);
+}
+
+/* ─── Tax section full UI ─────────────────────────────────── */
+function updateTaxSection() {
+  if (!state.taxComparison) return;
+  const { newRegime, oldRegime, recommended, saving } = state.taxComparison;
+
+  function slabRows(slabs) {
+    if (!slabs || slabs.length === 0) return `<tr><td colspan="3" class="text-center text-slate-500 py-2 text-xs">No taxable income</td></tr>`;
+    return slabs.map(s => `
+      <tr class="border-t border-white/5">
+        <td class="py-1.5 text-xs text-slate-400">${formatRupee(s.from)} – ${s.to === Infinity ? '∞' : formatRupee(s.to)}</td>
+        <td class="py-1.5 text-xs text-center text-slate-300">${(s.rate * 100).toFixed(0)}%</td>
+        <td class="py-1.5 text-xs text-right text-white">${formatRupee(s.tax)}</td>
+      </tr>`).join('');
+  }
+
+  // New regime breakdown
+  const newBreakdown = document.getElementById('tax-new-breakdown');
+  if (newBreakdown) {
+    newBreakdown.innerHTML = `<table class="w-full">
+      <thead><tr>
+        <th class="text-left text-xs text-slate-500 pb-1">Slab</th>
+        <th class="text-center text-xs text-slate-500 pb-1">Rate</th>
+        <th class="text-right text-xs text-slate-500 pb-1">Tax</th>
+      </tr></thead>
+      <tbody>${slabRows(newRegime.slabDetails)}</tbody>
+    </table>`;
+  }
+
+  // Old regime breakdown
+  const oldBreakdown = document.getElementById('tax-old-breakdown');
+  if (oldBreakdown) {
+    const dedRows = Object.entries(newRegime.deductions ?? {}).length > 0
+      ? Object.entries(oldRegime.deductions ?? {}).filter(([,v]) => v > 0).map(([k, v]) =>
+          `<tr class="border-t border-white/5"><td class="py-1 text-xs text-slate-400" colspan="2">${k}</td><td class="py-1 text-xs text-right text-emerald-400">– ${formatRupee(v)}</td></tr>`
+        ).join('')
+      : '';
+    oldBreakdown.innerHTML = `<table class="w-full">
+      <thead><tr>
+        <th class="text-left text-xs text-slate-500 pb-1">Slab</th>
+        <th class="text-center text-xs text-slate-500 pb-1">Rate</th>
+        <th class="text-right text-xs text-slate-500 pb-1">Tax</th>
+      </tr></thead>
+      <tbody>${  dedRows ? `<tr><td colspan="3" class="text-xs text-slate-500 pt-1 pb-0.5 font-medium">Deductions</td></tr>${dedRows}<tr><td colspan="3" class="pt-1"></td></tr>` : '' }${slabRows(oldRegime.slabDetails)}</tbody>
+    </table>`;
+  }
+
+  setText('tax-new-total',          formatRupee(newRegime.totalTax));
+  setText('tax-old-total',          formatRupee(oldRegime.totalTax));
+  setText('tax-new-effective-rate', `${newRegime.effectiveRate?.toFixed(2) ?? 0}%`);
+  setText('tax-old-effective-rate', `${oldRegime.effectiveRate?.toFixed(2) ?? 0}%`);
+
+  // Winner badge
+  const newBadge = document.getElementById('tax-new-badge');
+  const oldBadge = document.getElementById('tax-old-badge');
+  if (newBadge) newBadge.classList.toggle('hidden', recommended !== 'NEW');
+  if (oldBadge) oldBadge.classList.toggle('hidden', recommended !== 'OLD');
+
+  // Recommendation banner
+  const banner    = document.getElementById('tax-recommendation-banner');
+  const bannerTitle = document.getElementById('tax-banner-title');
+  const bannerDesc  = document.getElementById('tax-banner-desc');
+  const bannerIcon  = document.getElementById('tax-banner-icon');
+  if (banner) {
+    banner.classList.remove('hidden');
+    const regimeName = recommended === 'NEW' ? 'New Regime' : recommended === 'OLD' ? 'Old Regime' : null;
+    if (regimeName && saving > 0) {
+      if (bannerTitle) bannerTitle.textContent = `${regimeName} saves you ${formatRupee(saving)}/year`;
+      if (bannerDesc)  bannerDesc.textContent  = `Based on your income and deductions, the ${regimeName} results in lower tax.`;
+      if (bannerIcon)  bannerIcon.textContent  = recommended === 'NEW' ? '⚡' : '🏛️';
+    } else {
+      if (bannerTitle) bannerTitle.textContent = 'Both regimes result in equal tax';
+      if (bannerDesc)  bannerDesc.textContent  = 'Consider other factors like deduction convenience.';
+      if (bannerIcon)  bannerIcon.textContent  = '⚖️';
+    }
+  }
+
+  // LTCG harvesting result
+  const ltcgEl = document.getElementById('ltcg-harvest-result');
+  if (ltcgEl && state.taxComparison.ltcgHarvesting) {
+    const { taxSaved, recommendHarvest } = state.taxComparison.ltcgHarvesting;
+    ltcgEl.innerHTML = recommendHarvest
+      ? `<span class="text-emerald-400 font-semibold">Book ₹1.25L gains now → saves ~${formatRupee(taxSaved)}/yr tax-free</span>`
+      : `<span class="text-slate-400">No LTCG harvesting benefit at current gain levels.</span>`;
+  }
+}
+
+/* ─── Goals preview on dashboard ─────────────────────────── */
+function updateGoalsPreview() {
+  const list = document.getElementById('goals-preview-list');
+  if (!list) return;
+  const currentYear = state.planStartYear ?? new Date().getFullYear();
+
+  if (!state.goals || state.goals.length === 0) {
+    list.innerHTML = `<div class="text-center py-6 text-slate-500 text-sm">
+      <p class="text-2xl mb-1">🎯</p>No goals yet — add them in the Inputs section.
+    </div>`;
+    return;
+  }
+
+  const ICONS = { EDUCATION: '🎓', MARRIAGE: '💍', PROPERTY: '🏠', VEHICLE: '🚗', TRAVEL: '✈️', RETIREMENT: '🏖️', OTHER: '🎯' };
+  list.innerHTML = state.goals.map(g => {
+    const years = g.targetYear ? Math.max(0, g.targetYear - currentYear) : 0;
+    const inflated = g.todayValue * Math.pow(1 + (g.inflationRate ?? 0.08), years);
+    return `
+    <div class="goal-preview-item flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+      <span class="text-xl">${ICONS[g.type] ?? '🎯'}</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-white truncate">${g.name}</p>
+        <p class="text-xs text-slate-400">${g.targetYear ? `${g.targetYear} · ${years}y away` : '–'}</p>
+      </div>
+      <div class="text-right shrink-0">
+        <p class="text-sm font-semibold text-brand">${formatRupee(inflated)}</p>
+        <p class="text-xs text-slate-500">inflated</p>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 /* ═════════════════════════════════════════════════════════════
@@ -466,6 +586,154 @@ function handleAuthStateChange(user) {
 }
 
 /* ═════════════════════════════════════════════════════════════
+   TAX INPUTS FORM
+   Renders deduction fields inside #tax-inputs-container
+═════════════════════════════════════════════════════════════ */
+function mountTaxInputsForm(container) {
+  if (!container) return;
+  const ti = state.taxInputs;
+
+  container.innerHTML = `
+    <div class="card">
+      <h2 class="card-title mb-4">Income &amp; Tax Deductions</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div class="form-group">
+          <label for="tax-gross-salary" class="form-label">Gross Annual Salary</label>
+          <div class="form-input-prefix-group">
+            <span class="form-input-prefix">₹</span>
+            <input id="tax-gross-salary" type="number" class="form-input" min="0" step="10000"
+              value="${ti.grossSalary ?? state.monthlyIncome * 12 ?? 0}" />
+          </div>
+          <p class="form-hint">Pre-tax CTC / total income before deductions</p>
+        </div>
+
+        <div class="form-group">
+          <label for="tax-epf" class="form-label">EPF Contribution (annual)</label>
+          <div class="form-input-prefix-group">
+            <span class="form-input-prefix">₹</span>
+            <input id="tax-epf" type="number" class="form-input" min="0" step="1000"
+              value="${ti.epfContrib ?? 0}" />
+          </div>
+          <p class="form-hint">Employee share only — counts toward 80C</p>
+        </div>
+
+        <div class="form-group">
+          <label for="tax-ppf" class="form-label">PPF Contribution (annual)</label>
+          <div class="form-input-prefix-group">
+            <span class="form-input-prefix">₹</span>
+            <input id="tax-ppf" type="number" class="form-input" min="0" max="150000" step="1000"
+              value="${ti.ppfContrib ?? 0}" />
+          </div>
+          <p class="form-hint">Max ₹1.5L/yr under 80C</p>
+        </div>
+
+        <div class="form-group">
+          <label for="tax-elss" class="form-label">ELSS Investment (annual)</label>
+          <div class="form-input-prefix-group">
+            <span class="form-input-prefix">₹</span>
+            <input id="tax-elss" type="number" class="form-input" min="0" step="5000"
+              value="${ti.elssContrib ?? 0}" />
+          </div>
+          <p class="form-hint">Equity Linked Savings Scheme — 80C</p>
+        </div>
+
+        <div class="form-group">
+          <label for="tax-life-insurance" class="form-label">Life Insurance Premium (annual)</label>
+          <div class="form-input-prefix-group">
+            <span class="form-input-prefix">₹</span>
+            <input id="tax-life-insurance" type="number" class="form-input" min="0" step="1000"
+              value="${ti.lifeInsurance ?? 0}" />
+          </div>
+          <p class="form-hint">Term / endowment premiums — 80C</p>
+        </div>
+
+        <div class="form-group">
+          <label for="tax-home-loan" class="form-label">Home Loan Interest (annual)</label>
+          <div class="form-input-prefix-group">
+            <span class="form-input-prefix">₹</span>
+            <input id="tax-home-loan" type="number" class="form-input" min="0" max="200000" step="1000"
+              value="${ti.homeLoanInterest ?? 0}" />
+          </div>
+          <p class="form-hint">Section 24(b) — max ₹2L for self-occupied</p>
+        </div>
+
+        <div class="form-group">
+          <label for="tax-medical-self" class="form-label">Medical Premium — Self &amp; Family</label>
+          <div class="form-input-prefix-group">
+            <span class="form-input-prefix">₹</span>
+            <input id="tax-medical-self" type="number" class="form-input" min="0" step="500"
+              value="${ti.medicalPremiumSelf ?? 0}" />
+          </div>
+          <p class="form-hint">Section 80D — max ₹25,000 (self below 60)</p>
+        </div>
+
+        <div class="form-group">
+          <label for="tax-medical-parents" class="form-label">Medical Premium — Parents</label>
+          <div class="form-input-prefix-group">
+            <span class="form-input-prefix">₹</span>
+            <input id="tax-medical-parents" type="number" class="form-input" min="0" step="500"
+              value="${ti.medicalPremiumParents ?? 0}" />
+          </div>
+          <p class="form-hint">80D — extra ₹25K or ₹50K if parents 60+</p>
+        </div>
+
+        <div class="form-group">
+          <label for="tax-nps" class="form-label">NPS Contribution — 80CCD(1B) (annual)</label>
+          <div class="form-input-prefix-group">
+            <span class="form-input-prefix">₹</span>
+            <input id="tax-nps" type="number" class="form-input" min="0" max="50000" step="5000"
+              value="${ti.npsContrib80CCD1B ?? 0}" />
+          </div>
+          <p class="form-hint">Additional ₹50K deduction over and above 80C</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label flex items-center gap-2">
+            <input id="tax-parents-senior" type="checkbox" class="form-checkbox" ${ti.parentsAbove60 ? 'checked' : ''} />
+            Parents are Senior Citizens (60+)
+          </label>
+          <p class="form-hint">Increases 80D parents limit from ₹25K → ₹50K</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  function onTaxInput(fieldSuffix, stateKey, transform) {
+    const el = container.querySelector(`#tax-${fieldSuffix}`);
+    if (!el) return;
+    const evt = el.type === 'checkbox' ? 'change' : 'input';
+    el.addEventListener(evt, () => {
+      const raw = el.type === 'checkbox' ? el.checked : el.value;
+      const val = transform ? transform(raw) : raw;
+      state.taxInputs = { ...state.taxInputs, [stateKey]: val };
+      // Re-run tax comparison and refresh section
+      state.taxComparison = compareTaxRegimes({
+        ...state.taxInputs,
+        grossSalary: state.taxInputs.grossSalary ?? state.monthlyIncome * 12,
+      });
+      updateDashboardTaxSummary();
+      updateTaxSection();
+    });
+  }
+
+  // Wire all fields: [htmlFieldSuffix, taxInputs key, optional transform]
+  const num = v => parseFloat(v) || 0;
+  [
+    ['gross-salary',    'grossSalary',          num],
+    ['epf',             'epfContrib',            num],
+    ['ppf',             'ppfContrib',            num],
+    ['elss',            'elssContrib',           num],
+    ['life-insurance',  'lifeInsurance',         num],
+    ['home-loan',       'homeLoanInterest',      num],
+    ['medical-self',    'medicalPremiumSelf',    num],
+    ['medical-parents', 'medicalPremiumParents', num],
+    ['nps',             'npsContrib80CCD1B',     num],
+    ['parents-senior',  'parentsAbove60',        v => Boolean(v)],
+  ].forEach(([f, k, t]) => onTaxInput(f, k, t));
+}
+
+/* ═════════════════════════════════════════════════════════════
    FORM MOUNTS
 ═════════════════════════════════════════════════════════════ */
 
@@ -475,6 +743,9 @@ function mountAllForms() {
   mountPersonalDetailsForm(container('form-personal-details'), state, (field, value) => {
     updateState({ [field]: value });
   });
+
+  // Tax deductions form
+  mountTaxInputsForm(container('tax-inputs-container'));
 
   mountAssetsForm(container('form-assets'), state, (field, value) => {
     updateState({ [field]: value });

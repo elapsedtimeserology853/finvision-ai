@@ -71,5 +71,39 @@ export function mountPersonalDetailsForm(container, state, onUpdate) {
     </div>
   `;
 
-  // Phase 3 — attach event listeners here
+  function bind(id, field, transform) {
+    const el = container.querySelector(`#${id}`);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      const val = transform ? transform(el.value) : el.value;
+      if (field === 'monthlyIncome') {
+        const annualEl = container.querySelector('#display-annual-income');
+        if (annualEl) annualEl.textContent = formatRupee(val * 12);
+      }
+      if (field === 'retirementAge') {
+        const disp = container.querySelector('#retirement-age-display');
+        if (disp) disp.textContent = val;
+      }
+      if (field === 'salaryRaiseRate') {
+        const disp = container.querySelector('#salary-raise-display');
+        if (disp) disp.textContent = `${(val * 100).toFixed(1)}%`;
+      }
+      if (field === 'dob') {
+        const birth = new Date(el.value);
+        if (!isNaN(birth)) {
+          const age = new Date().getFullYear() - birth.getFullYear();
+          const ageEl = container.querySelector('#display-current-age');
+          if (ageEl) ageEl.textContent = age;
+          onUpdate('currentAge', age);
+        }
+      }
+      onUpdate(field, val);
+    });
+  }
+
+  bind('inp-name',           'name');
+  bind('inp-dob',            'dob');
+  bind('inp-retirement-age', 'retirementAge',  v => parseInt(v, 10));
+  bind('inp-monthly-income', 'monthlyIncome',  v => parseFloat(v) || 0);
+  bind('inp-salary-raise',   'salaryRaiseRate', v => parseFloat(v) / 100);
 }
