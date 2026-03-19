@@ -16,8 +16,7 @@
  *   • calculatePlanHealth(trajectory, goals) → 0–100 score
  */
 
-// Phase 2 will export the full implementations.
-// Stub exports prevent import errors during Phase 1 dev build.
+import { INFLATION, CORPUS, GOAL_TYPES, blendedReturn } from './constants.js';
 
 /**
  * @typedef {Object} PersonalInputs
@@ -111,8 +110,81 @@ export function goalFutureValue(todayValue, inflationRate, yearsUntilGoal) {
  * @returns {YearlyRow[]} Array of 70+ rows (age to 100)
  */
 export function buildCorpusTrajectory(inputs) {
-  // Phase 2 — full implementation. Returns empty array stub.
-  return [];
+  const {
+    currentAge,
+    retirementAge,
+    annualIncome,
+    salaryRaiseRate,
+    equityFraction,
+    currentEquity = 0,
+    currentDebt   = 0,
+    currentEPF    = 0,
+    monthlyExpenses,
+    monthlyMedicalPremium,
+    planStartYear,
+    goals = [],
+  } = inputs;
+
+  const cagr = blendedReturn(equityFraction);
+  const rows = [];
+
+  // Starting corpus = sum of all existing asset buckets
+  let openingBalance = (currentEquity || 0) + (currentDebt || 0) + (currentEPF || 0);
+
+  const totalYears = CORPUS.EOL_AGE - currentAge;
+
+  for (let i = 0; i <= totalYears; i++) {
+    const age         = currentAge + i;
+    const calendarYear = planStartYear + i;
+    const isRetired   = age >= retirementAge;
+
+    // Salary with raise each pre-retirement year; zero post-retirement
+    const annualIncomeThisYear = isRetired
+      ? 0
+      : annualIncome * Math.pow(1 + salaryRaiseRate, i);
+
+    // Expenses grow by their respective inflation rates from year 0
+    const lifestyleExpenses = monthlyExpenses * 12 * Math.pow(1 + INFLATION.GENERAL, i);
+    const medicalExpenses   = monthlyMedicalPremium * 12 * Math.pow(1 + INFLATION.MEDICAL, i);
+
+    // One-time goal disbursements scheduled for this calendar year
+    const goalsThisYear = goals.filter(g => g.targetYear === calendarYear);
+    const goalOutlays = goalsThisYear.reduce((sum, g) => {
+      const yearsUntilGoal = g.targetYear - planStartYear;
+      const inflRate = g.inflationRate != null
+        ? g.inflationRate
+        : (GOAL_TYPES[g.type]?.inflation ?? INFLATION.GENERAL);
+      return sum + goalFutureValue(g.todayValue, inflRate, Math.max(0, yearsUntilGoal));
+    }, 0);
+
+    const totalExpenses = lifestyleExpenses + medicalExpenses + goalOutlays;
+    const netSurplus    = annualIncomeThisYear - totalExpenses;
+
+    // Portfolio grows at blended CAGR on opening balance
+    const interestAccrued = openingBalance * cagr;
+    const closingBalance  = openingBalance + interestAccrued + netSurplus;
+
+    rows.push({
+      calendarYear,
+      age,
+      openingBalance,
+      annualIncome:      annualIncomeThisYear,
+      lifestyleExpenses,
+      medicalExpenses,
+      goalOutlays,
+      totalExpenses,
+      netSurplus,
+      interestAccrued,
+      closingBalance,
+      isRetired,
+      goalsThisYear,
+    });
+
+    // Next year starts where this year ended
+    openingBalance = closingBalance;
+  }
+
+  return rows;
 }
 
 /**
@@ -137,7 +209,33 @@ export function calculateRequiredSIP(targetCorpus, annualRate, years) {
  * @param {Goal[]} goals
  * @returns {number} 0–100
  */
-export function calculatePlanHealth(trajectory, goals) {
-  // Phase 2 — full implementation
-  return 0;
+export function calculatePlanHealth(trajectory, goals = []) {
+  if (!trajectory || trajectory.length === 0) return 0;
+
+  const lastRow = trajectory[trajectory.length - 1];
+  const requiredTerminal = lastRow.totalExpenses * CORPUS.LEGACY_BUFFER_MULTIPLIER;
+  const totalYears       = trajectory.length;
+  const shortfallYears   = trajectory.filter(r => r.closingBalance < 0).length;
+
+  // Terminal corpus score (0–50 pts)
+  // Full 50 pts if closing balance at age 100 >= 4× that year's expenses (legacy buffer)
+  const terminalRatio = requiredTerminal > 0
+    ? Math.max(0, lastRow.closingBalance / requiredTerminal)
+    : (lastRow.closingBalance >= 0 ? 1 : 0);
+  const terminalScore = Math.min(50, terminalRatio * 50);
+
+  // Continuity score (0–30 pts): fraction of years corpus stays positive
+  const continuityScore = 30 * (1 - shortfallYears / totalYears);
+
+  // Goal funding score (0–20 pts): fraction of goals met without corpus shortfall
+  let goalScore = 20;
+  if (goals.length > 0) {
+    const funded = goals.filter(g => {
+      const row = trajectory.find(r => r.calendarYear === g.targetYear);
+      return row ? row.closingBalance >= 0 : true;
+    }).length;
+    goalScore = 20 * (funded / goals.length);
+  }
+
+  return Math.round(Math.min(100, terminalScore + continuityScore + goalScore));
 }

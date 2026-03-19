@@ -45,6 +45,7 @@ desktop.ini
 # Testing
 coverage/
 .nyc_output/
+smoke-test.mjs
 
 # Misc
 *.tgz
