@@ -170,9 +170,20 @@
       <div id="auth-guest-area">
         <button id="btn-open-auth" class="btn-primary text-sm py-1.5 px-4">Sign In</button>
       </div>
-      <div id="auth-user-area" class="hidden flex items-center gap-2">
-        <div id="user-avatar" class="w-8 h-8 rounded-full bg-brand/30 flex items-center justify-center text-brand text-sm font-semibold cursor-pointer" title="Account settings">
+      <div id="auth-user-area" class="hidden flex items-center gap-2 relative">
+        <div id="user-avatar" class="w-8 h-8 rounded-full bg-brand/30 flex items-center justify-center text-brand text-sm font-semibold cursor-pointer select-none" title="Account settings" aria-haspopup="true" aria-expanded="false">
           <span id="user-initial">U</span>
+        </div>
+        <!-- User dropdown menu -->
+        <div id="user-dropdown" class="hidden absolute right-0 top-10 w-56 bg-surface-2 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+          <div class="px-4 py-3 border-b border-white/5">
+            <p id="user-dropdown-name" class="text-sm font-semibold text-white truncate">User</p>
+            <p id="user-dropdown-email" class="text-xs text-slate-400 truncate mt-0.5"></p>
+          </div>
+          <button id="btn-logout" class="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-surface-3 hover:text-red-400 flex items-center gap-2 transition-colors">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Sign Out
+          </button>
         </div>
       </div>
 

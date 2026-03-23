@@ -565,6 +565,8 @@ async function handleAuthStateChange(user) {
 
     setText('user-initial', state.userName[0].toUpperCase());
     setText('dash-user-name', state.userName);
+    setText('user-dropdown-name', state.userName);
+    setText('user-dropdown-email', user.email || '');
 
     guestArea?.classList.add('hidden');
     userArea?.classList.remove('hidden');
@@ -898,6 +900,34 @@ function bindEvents() {
     const targetId = toggleBtn.dataset.target;
     const input    = document.getElementById(targetId);
     if (input) input.type = input.type === 'password' ? 'text' : 'password';
+  });
+
+  // ── User avatar dropdown ───────────────────────────────────
+  const userAvatar   = document.getElementById('user-avatar');
+  const userDropdown = document.getElementById('user-dropdown');
+
+  userAvatar?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = !userDropdown.classList.contains('hidden');
+    userDropdown?.classList.toggle('hidden', isOpen);
+    userAvatar.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    userDropdown?.classList.add('hidden');
+    userAvatar?.setAttribute('aria-expanded', 'false');
+  });
+
+  // Logout button
+  document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    userDropdown?.classList.add('hidden');
+    try {
+      await fbSignOut();
+      showToast('You have been signed out.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
   });
 
   // ── Projection table search & pagination ──────────────────
